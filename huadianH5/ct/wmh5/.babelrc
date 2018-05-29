@@ -1,0 +1,22 @@
+{
+  "presets": [
+    ["env", { "modules": false }],
+    "stage-2"
+  ],
+  "ignore": [
+	"./src/assets/js/mui.min.js",
+	"./src/assets/js/mui.picker.min.js",
+	"./src/assets/js/NIM_Web_SDK_v3.6.0.js",
+	"./src/assets/js/NIM_Web_Netcall_v3.6.0.js",
+	"./src/assets/js/NIM_Web_NIM_v3.6.0.js",
+	"./src/assets/js/NIM_Web_Chatroom_v3.6.0.js"
+  ],
+  "plugins": ["transform-runtime"],
+  "comments": false,
+  "env": {
+    "test": {
+      "presets": ["env", "stage-2"],
+      "plugins": [ "istanbul" ]
+    }
+  }
+}

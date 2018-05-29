@@ -1,0 +1,146 @@
+/*
+ * 移动视觉规范
+ * 屏幕尺寸:750×1334
+ * BC:background-color:;
+ * CC:color:;
+ * H:height:;
+ * W:width:;
+ * B:颜色;
+ * B_H:灰色 
+ * B_L:蓝色
+ * B_B:白色
+ * B_F:红色
+ * CF:font-size
+ * Bt:button 按钮
+ * Bt_A:button_active 按钮点击
+ * Bt_I:button_interdict 按钮禁止点击
+ */
+//标准色
+//$B_F1: #9d0d0d;//主色调，用于图标、LOGO、主按钮点击时颜色
+$B_F1: #ff7f00;//主色调，用于图标、LOGO、主按钮点击时颜色
+$B_F2: #ff4c50;//辅色调，主要用于重要提示性文字、默认图标 
+$B_F3: #e89696;//灰化色，用于按钮不可操作时颜色显示
+
+$B_H0: #000000;//纯黑色
+$B_H1: #333333;//用于列表、菜单主标题，重要内容
+$B_H2: #666666;//用于次要标题展示内容，及输入框输入时的文字颜色
+$B_H3: #999999;//用于输入框内的默认提示文字颜色，及资料展示内容、次按钮的文字颜色
+$B_H4: #e5e5e5;//用于列表分割线
+$B_H5: #eaeaea;//用于列表边框
+$B_H6: #f5f5f5;//用于界面背景
+
+$B_L1: #0389d3;//调和色，目前应用于图标、链接文字等
+$B_B: #ffffff;//纯白色
+
+$B_L2: #029d2a;//绿色
+$B_L3: #79ca8e;//绿色
+
+$B_F4: #e2383b;//红色
+//标准字
+//重要
+$CF36: .36rem;//用于头部标题，主按钮 文字 
+
+$CF34: .34rem;
+
+$CF32: .32rem;//用于各列表展示标题
+
+//一般       
+$CF30: .30rem;//用于次标题
+$CF28: .28rem;//各列表展示内容
+
+//弱
+$CF24: .24rem;//各类提示文字、链接性 文字，及展示性文字
+$CF20: .20rem;//最小文字提示
+
+//按钮
+//主按钮
+$Bt_BC: #ff4c50;//按钮背景颜色
+$Bt_CC: #ffffff;//按钮文字颜色
+$Bt_H: .9rem;//按钮高度
+
+//_A表示点击
+//_I表示禁止
+//主按钮点击时
+$Bt_A_BC: #9d0d0d;//按钮点击时文字颜色
+$Bt_A_CC: #ffffff;//按钮点击时文字颜色
+$Bt_A_H: .9rem;//按钮点击时高度
+
+//主按钮不可操作时
+$Bt_I_BC: #e89696;//按钮禁止点击时文字颜色
+$Bt_I_CC: #fde0e0;//按钮禁止点击时文字颜色
+$Bt_I_H: .9rem;//按钮禁止点击时高度
+
+//边距
+$P_L: .2rem;//左边距
+$P_R: .2rem;//右边距
+$P_T: .2rem;//上边距
+$P_B: .2rem;//下边距
+$P_LR: .2rem;//左右边距
+$P_TB: .2rem;//上下边距 
+$P_LRTB: .2rem;//上下左右边距
+
+$P_LF: .1rem;//左边距 一半
+$P_RF: .1rem;//右边距 一半
+$P_TF: .1rem;//上边距 一半
+$P_BF: .1rem;//下边距 一半
+$P_LRF: .1rem;//左右边距 一半
+$P_TBF: .1rem;//上下边距 一半
+$P_LRTBF: .1rem;//上下左右边距 一半
+
+$L_H: 1rem;//列表格子高度为 100 px
+
+$R_F1: #e7580c;//选择按钮的颜色
+
+$logoImg: "http://guoteng.oss-cn-shenzhen.aliyuncs.com/default/default.png?x-oss-process=image/resize,m_fill,";//背景图片
+@function px2rem($px, $base-font-size: 50px) {
+  @return ($px / $base-font-size) * .4rem;
+}
+
+@function getlogoUrl($width, $heigth) {
+   $width:u($width);
+   $heigth:u($heigth);
+  @return url($logoImg+'h_'+$width+',w_'+$heigth) no-repeat center center / cover #FFF;
+}
+
+@function backgroundUrl($url) {
+    @return url($url) no-repeat center center / cover #FFF;
+}
+
+$pixelBase: 50;
+// 配置
+$px-only:true;
+/* 1 */
+
+@function parseInt($n) {
+    @return $n / ($n * 0 + 1);
+    /* 2 */
+}
+
+@function u($values) {
+    /* 3 */
+    $list: ();
+    /* 4 */
+    @each $value in $values {
+        /* 5 */
+        $unit: unit($value);
+        /* 6 */
+        $val: parseInt($value);
+        /* 2 */
+        @if ($px-only) and ($unit=='rem') {
+            /* 7 */
+            $list: append($list, round($val * $pixelBase));
+            /* 7 */
+        }
+        @else if($unit=='px') or ($unit=='rem') {
+            /* 8 */
+            $list: append($list, $val);
+            /* 8 */
+        }
+        @else {
+            @warn 'There is no unit conversion for #{$unit}';
+            /* 9 */
+        }
+    }
+    @return $list();
+    /* 10 */
+}

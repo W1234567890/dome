@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!--<metahttp-equiv metahttp-equiv="content-type" content="text/html;charset=utf-8"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black"> 
+  <meta http-equiv="Pragma"content="no-cache" />
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="format-detection" content="telephone=no" />
+  <title>My App</title>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="text/javascript">
+  	//动态插入script标签 
+	function createScript(url, callback){ 
+		try{
+			let isjs=".js";
+			let iscss = ".css";
+		    if(url.indexOf(".")>-1){
+		        let p = url.lastIndexOf(".");
+		        let strPostfix=url.substring(p,url.length);        
+		        strPostfix = strPostfix.toLowerCase();
+		        if(isjs.indexOf(strPostfix)>-1){
+		        		 var oScript = document.createElement('script');
+		   			 oScript.type = 'text/javascript';  
+		   			 oScript.src = url; 
+		        }else if(iscss.indexOf(strPostfix)>-1){
+		        	 	var oScript = document.createElement('link'); 
+		    			oScript.type = 'text/css';  
+		   			oScript.rel = "stylesheet"
+		    			oScript.href = url; 
+		        }
+		    }
+		    oScript.async = true;
+		
+		    // 判断IE8及以下浏览器 
+		    var isIE = !-[1,]; 
+		    if(isIE){ 
+		        oScript.onreadystatechange = function(){ 
+		            if(this.readyState == 'loaded' || this.readyState == 'complete'){ 
+		                callback(); 
+		            } 
+		        } 
+		    } else { 
+		    // IE9及以上浏览器，Firefox，Chrome，Opera 
+		    oScript.onload = function(){ 
+		        callback(); 
+		        } 
+		    } 
+		    document.body.appendChild(oScript); 
+		}catch(e){}
+	} 
+	var theme = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) ? 'ios' : 'material';
+	var icons = theme === 'ios' ? 'http://cdn.framework7.io/css/framework7-icons.css' : 'https://fonts.googleapis.com/icon?family=Material+Icons';
+	var data = [{
+		url: "./static/dist/css/framework7." + theme + ".min.css"
+	},{
+		url: "./static/dist/css/framework7." + theme + ".colors.min.css"
+	},{
+		url: "./static/dist/css/config.css"
+	},{
+		url: "./static/dist/css/style.css"
+	},{
+		url: "./static/dist/js/html5media.min.js"
+	},{
+		url: "http://gosspublic.alicdn.com/aliyun-oss-sdk-4.4.4.min.js"
+	},{
+		url: icons
+	}]
+//	,{
+//		url: "./static/dist/js/framework7.js"
+//	}
+	var i = 0;
+	var c = function(){
+		if(i < data.length){
+			createScript(data[i].url, function(){ 
+				i++;
+				c();
+	    	});
+		}
+	}
+	c();
+  </script>
+</body>
+</html>

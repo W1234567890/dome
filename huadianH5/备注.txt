@@ -1,0 +1,54 @@
+少花点项目前端h5采用的是Vue框架。
+
+node   
+安装vue-cli
+
+下载依赖包：npm install   
+
+运行：npm run dev   
+
+
+用户版
+
+打包：npm run build   
+
+
+少花点用户版商品详情、vip特权、协议等：http://apph5.pengjipay.com/#/
+
+少花点社区:http://apph5.pengjipay.com:8089/#/
+
+少花点蛋糕店:http://apph5.pengjipay.com:8089/dgd/index.html?url=orderlist&sellerId=商户Id
+dgd/src/config/assist.js文件下配置 appId token
+
+
+
+少花点商户版：http://apph5.pengjipay.com:8089/admin/#/  （需要登录信息，如果想要在本地调试，则需
+1.模拟的首页merChantIndex中div行内样式                   改为block；
+
+2.将localstorage缓存清除；
+
+3.页面切换在login页，登录即可   记得打包前将merChantIndex样式隐藏）
+该文件再商家端
+
+andorid端的用户版商户联盟中商户的列表
+ 
+dgd 蛋糕店 点击畅想专柜  点击店铺模块
+
+参数拼接http://apph5.pengjipay.com:8089/dgd/index.html?url=orderlist&sellerId=387244337118838784
+
+邀请好友二维码
+    例如：http://apph5.pengjipay.com/#/inviteFriends?qrCode=http%3A%2F%2Fshaohuadian17.oss-cn-beijing.aliyuncs.com%2Fimages%2F1a3a1c465a38466480ec41a6bb0d0841.jpg
+
+
+商户详情   goodsId指定商户id（主键）
+http://testapph5.pengjipay.com:8088/#/merchantDetail?goodsId=357973316599808000
+
+
+商品详情 
+
+http://testapph5.pengjipay.com:8088/#/goods?goodsId=360084750234288128
+
+
+
+配置页面
+route/index.js

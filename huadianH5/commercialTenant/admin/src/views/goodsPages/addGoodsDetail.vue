@@ -1,0 +1,851 @@
+<template>
+	<div class="relaseActivity" :class="!getActivityOrder && 'bgbai'">
+		<div>
+			<div class="wrapper">
+				<div class="contentBox">
+					 <div class="addBox">
+						<com-release-detail @RestDataArr='RestDataArr'></com-release-detail>
+					</div>
+					<div class="boxContent">
+						<div class="add">
+							<div class="addItem" @click="bottomShow = !bottomShow">
+								<span class="icon iconfont" v-html="icon.icon1"></span>
+								<span class="addTitle">添加商品详情</span>
+							</div>
+						</div>
+					</div>
+					
+					<div class="footerItemDg"></div>
+					<div class="footerItem">
+						<p class="activityBtns">
+							<router-link class="btn" :to="{path:'/activityPreview'}">预览</router-link>
+							<span class="subBtn" @click="submit">
+								<span class="subBtnTitle">完成</span>
+							</span>
+						</p>
+					</div>
+				</div>
+			</div>
+			
+			
+			<div class="itemWays" v-show="bottomShow">
+				<div class="choseAddItem">
+					<div class="swiper-container" id="swiper-container">
+						<div class="swiper-wrapper">
+							<div class="swiper-slide" v-for="(vo,key) in DataArr" @click="addData(vo.rest)">
+								<input v-if="vo.name=='图片'" 
+									class="addImageFile" 
+									type="file" 
+									accept="image/*" 
+									multiple 
+									@change="readAsDataURL" />
+								<span class="icon iconfont" v-html="vo.icon"></span>
+								<p>{{vo.name}}</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<p class="cancle" @click="bottomShow = !bottomShow">
+					<span class="btnCancle">取消</span>
+				</p>
+			</div>
+			<div class="lineWrap" v-if="lineListShow">
+				 <ul class="lineList">
+				 	<li class="lineItem" v-for="(vo,key) in lineData" @click="addData('line',vo)">
+			  	  	 	<img :src="vo.line" id="vo.lineId"/>
+			  	  	 </li>
+				 </ul>
+				 <p class="cancle">
+					<span class="btnCancle" @click="lineListShow = !lineListShow">取消</span>
+				</p>
+			</div>
+		</div>
+		<div class="mask" v-show="bottomShow" @click="bottomShow = !bottomShow"></div>
+		
+		<!--<div v-show="!getAddBoxArr">{{getAddBoxArr}}</div>
+		<div v-show="!getAddBoxArr" class="content_main" ref="content_main">
+			<div class="boxContent" v-for="(vo,key) in getAddBoxArr">
+				<div v-if="vo.type=='text'">
+					<div class="auto-textarea-wrapper">
+					    <p class="auto-textarea-block" v-html="vo.data.html"></p>
+					</div>
+				</div>
+				<div v-if="vo.type=='img'">
+					<div class="dragPerBg"><img :src="vo.data.f"/></div>
+				</div>
+				<div v-if="vo.type=='line'">
+					<div class="dragPerBg"><img  class="line" :src="vo.data.line"/></div>
+				</div>
+				<div v-if="vo.type=='video'">
+					 <videoComment :videoArr="{vo,key}" v-on:playerErrer="player"></videoComment>
+				</div>
+			</div>
+			
+		</div>-->
+	</div>
+</template>
+<script>
+	import { mapGetters, mapActions } from 'vuex'
+	import comReleaseDetail from './comGoodsDetail'
+	export default {
+		data() {
+			return {
+				title:"添加商品详情",
+			    showTitle:true,
+				icon: {icon1: "&#xe6cc;",icon2: "&#xe653;",icon3: "&#xe629;"},//图标
+				lineData:[
+					{line:'http://tjweimi.oss-cn-zhangjiakou.aliyuncs.com/images/weimiApi/h51500551421861line7.gif',lineId:111111},
+	            ],//分割线集合
+	            DataArr : [
+		            {name:'文字',icon: "&#xe63f;",rest: 'text',},
+		            {name:'图片',icon: "&#xe6a4;",rest: 'img',},
+		            {name:'视频',icon: "&#xe643;",rest: 'video',},
+		            {name:'分割线',icon: "&#xe671;",rest: 'line',}
+	            ],//按钮
+	            tips: [
+					{name: "dataArr",content: "请添加详情内容"},
+				],
+				
+				queryArr: {},//路由数据
+				bottomShow: false,//是否显示底部
+				lineListShow:false,//是否显示分隔线
+				add: {
+					isAdd:false,//是否插入
+				},
+				
+				dataArr: [],//活动详情
+				orderArr: [],//商品详情
+				
+				address: null,
+				
+				titleImg: null,
+			}
+		},
+		components: {
+			'com-release-detail': comReleaseDetail,
+		},
+		computed: {
+	      ...mapGetters([
+	          'userInfo',
+	          'getXToken',
+	          'getUserData',
+	          'getXToken',
+	          'getActivityOrder',
+	          'getActivityArr',
+	          'getAddBoxArr',
+	          'getActivityEnlist',
+	      ]),
+	    },
+		watch: {
+			address(e){
+				this.setArr();
+			}
+		},
+		created(){
+			this.queryArr = {
+				type : this.$router.currentRoute.query.type,
+				id : this.$router.currentRoute.query.id,
+			}
+		},
+		beforeMount(){
+		 	this.$store.dispatch('showTitle',this.showTitle);
+		    this.$store.dispatch('title',this.title);
+	   },
+		mounted() {
+			let enlist = this.getActivityEnlist,arr = this.getActivityArr;
+			if(enlist){
+				this.address = enlist["address"].val;
+				this.titleImg = arr && arr["titleImg"] ? arr["titleImg"] : null;
+				this.setArr();
+				this.uploads();
+			}else{
+				if(!this.address){
+					this.Geolocation();
+				}
+			}
+			this.getArr();
+		},
+		methods: {
+			setArr(){
+				this.$store.dispatch('setActivityArr',{
+					queryArr	:   this.queryArr,			//type和id
+					orderArr  	: 	this.getActivityOrder,	//商品.
+					dataArr     :   this.getAddBoxArr,
+					address		:   this.address,			//地址
+					titleImg	: 	this.titleImg,
+				})
+			},
+			getArr(){
+				let arr1 = this.getActivityArr,
+					arr2 = this.queryArr;
+					if(!this.isnull(arr2)){
+						if(!this.isnull(arr1)){
+							let tp = arr1.queryArr.type != arr2.type,
+							i = arr1.queryArr.id != arr2.id;
+							if(tp || i){
+								this.$store.dispatch('setActivityArr',[]);
+								this.$store.dispatch('setActivityOrder',[]);
+								this.$store.dispatch('setAddBoxArr',[]);
+							}
+						}
+					}
+				for(var item in this.getActivityArr){
+					this.$set(this,item,this.getActivityArr[item]);
+				}
+			},
+			RestDataArr( o){
+				this.add = {
+					isAdd: true,
+					k: o.k
+				}
+				this.bottomShow = !0;
+				
+			},
+			goodsPromotion( o){
+				let data = this.queryArr;
+					data.add = {
+						isAdd: true,
+						k: o.k
+					};
+				this.$router.push({path:'/activityOrder',query: data})
+			},
+			addData( e, res){
+				let 
+				_self = this,
+				func = {
+					line( e){
+						_self.lineListShow = true;
+						if( res){
+							_self.addBox( e, res);
+						}
+					},
+					text( e){
+						_self.addBox( e,{
+							value: ''
+						});
+					},
+					img( e){
+						if(res){
+							_self.addBox( e, res);
+						}
+					},
+					video( e){
+						_self.prompt({
+							content: "视频地址",
+							placeholder: "请输入视频地址",
+							callback: (bool, o)=>{
+								if(bool){
+									_self.addBox( e, {
+										src: o
+									});
+								}
+							}
+						})
+					},
+				}
+				func[e]( e);
+			},
+			addBox( type,data){
+				if(!this.add.isAdd){
+					this.getAddBoxArr.push({
+						type,
+						data
+					});
+				}else{
+					this.getAddBoxArr.splice(Number(this.add.k) + 1,0,{
+						type,
+						data
+					});
+				}
+				this.$store.dispatch('setAddBoxArr',this.getAddBoxArr)
+				this.bottomShow = false;
+				this.lineListShow = false;
+				this.isAdd = false;
+			},
+			readAsDataURL( e){
+				try{
+					var f = new FileReader(),files = e.currentTarget.files[0];
+						f.readAsDataURL(e.currentTarget.files[0]);
+					f.onload = (f) => {
+						let imgArr = {
+							f : f.target.result,
+							files,
+						}
+						this.addData('img',imgArr)
+					};
+				}catch( e){
+					
+				}
+			},
+			isnull( t){
+				if(t == "" || t == null || t == undefined || (typeof t == 'object' && t.length <= 0))
+					return true;
+				
+				return false;
+			},
+			isTips( b){
+				let arr = this.getActivityArr;
+				if(!arr){
+					return;
+				}
+				let t,a,
+				
+				tips = this.tips,
+				activity = (arr.queryArr.type == 'activity');
+				if(activity){
+					tips.push({name: "orderArr",content: "请添加活动商品"})
+				}
+				for(var item in tips){
+					t=arr[tips[item].name];
+					a=tips[item].content;
+					if(this.isnull(t)){
+						this.toastMsg(a);
+						return;
+					}
+				}
+				b && b();
+			},
+			forEachs( arr, c){
+				if(this.isnull(arr)){
+					c && c();
+					return;
+				}
+				for(var i in arr){
+					c && c( i,arr[i]);
+				}
+			},
+			setfiles(url,c){
+				return new Promise((resolve, reject)=>{
+					if(typeof url == "object"){
+						this.oss(url,storeAs=>{
+							let u = "http://tjweimi.oss-cn-zhangjiakou.aliyuncs.com/" + storeAs;
+							c && c(u);
+							resolve && resolve(u);
+						})
+					}else{
+						c && c();
+						/*reject && reject()*/
+					}
+				});
+			},
+			restFiles(img,c,b){
+				if(img.length <= 0){
+					c && c(false);
+					return;
+				}
+				let u,data,arr,
+				getArr=this.getActivityArr,
+				activity = (getArr.queryArr.type == 'activity');
+				if(!b){
+					arr = getArr.dataArr;
+				}else{
+					if(activity){
+						arr = getArr.orderArr;
+					}else{
+						c && c(false);
+						return;
+					}
+				}
+				let s = 0,fc = ()=>{
+					if(this.isnull(img)){
+						c && c(true);
+						return;
+					}
+					var o = img[s];
+					var u = !b ? o.data.files : o.img.files;
+					this.setfiles(u,res=>{
+						if( res){
+							!b ? arr[o.key].data.files = res : arr[o.key].img.files = res;
+							arr.splice(o.key,1,arr[o.key]);
+						}
+						if(img.length - 1 == s){
+							c && c(true);
+							return;
+						}
+						s++;
+						fc();
+					})
+				};
+				fc();
+				/*this.forEachs(img,(i,o)=>{
+					u = !b ? o.data.files : o.img.files;
+					this.setfiles(u,res=>{
+						if( res){
+							!b ? arr[o.key].data.files = res : arr[o.key].img.files = res;
+							arr.splice(o.key,1,arr[o.key]);
+						}
+						if(img.length - 1 == i){
+							console.info(img)
+							c && c(true);
+							return;
+						}
+					})
+				})*/
+			},
+			submit(){
+				this.isTips(()=>{
+					let arr = this.getActivityArr.dataArr,
+						orderArr = this.getActivityArr.orderArr,
+						enlist = this.getActivityEnlist,
+						imgArr = [],
+						imgArr1 = [];
+						this.$store.dispatch('setLoadingState', true);
+						this.forEachs(arr,(i,o)=>{
+							if(o){
+								if(o.type == "img"){
+									o.key = i;
+									imgArr.push(o);
+								}
+							}
+						})
+						this.forEachs(orderArr,(i,o)=>{
+							if(o){
+								if(o.img){
+									o.key = i;
+									imgArr1.push(o);
+								}
+							}
+							
+						})
+						this.$nextTick(()=>{
+							this.restFiles(imgArr,(bool)=>{
+								this.restFiles(imgArr1,(bool)=>{
+									if(enlist && this.isnull(this.titleImg)){
+										this.setfiles( enlist["img"].files,res=>{
+											if(res){
+												this.titleImg = res;
+												this.setArr();
+											}
+											this.uploads(imgArr,true);
+										})
+									}else{
+										this.uploads(imgArr,true);
+									}
+								},true)
+							})
+						})
+						
+						return;
+					
+				})
+				/*setTimeout(()=>{
+					this.$router.go(-1);
+				},1500);*/
+			},
+			uploads(img,isPost){
+				let /*url = "activity/publish",*/
+					url = "http://192.168.1.142:8090/a/rest/activity/publish",
+					arr = this.getActivityArr,
+					orderArr = this.getActivityArr.orderArr,
+					queryArr = this.getActivityArr.queryArr,
+					enlist = this.getActivityEnlist,
+					data = {
+						content: this.contentArr(),//	String	Y		主题内容（报名/帖子/活动/视频）
+					};
+					if(enlist){
+						data["goods"] = enlist["goods"].data;
+						data.needUsername= enlist["enlist"].data.item[0].must ? 1 : 0;
+						data.needTe = enlist["enlist"].data.item[1].must ? 1 : 0;
+						data.tel = enlist["enlist"].data.val;
+						data.titleImg = this.titleImg;
+						this.$store.dispatch("setActivityDetail",data)
+					}
+					this.$store.dispatch("setActivityDetail",data)
+					this.$router.go(-1);
+				/*if(isPost){
+					this.getByUrl({data,url}, res=>{
+						this.ajax({
+							url : res.url,
+							data : res.data,
+							success:( res)=>{
+								console.info(res)
+								if(res.meta.code == "10000"){
+									
+									this.activityMyList1({},bool=>{
+										this.$store.dispatch('setLoadingState', false);
+										this.$store.dispatch('setActivityArr',[]);
+										this.$store.dispatch('setActivityOrder',[]);
+										this.$store.dispatch('setAddBoxArr',[]);
+										this.temp_value = null;
+										this.time_start = null;
+										this.time_end = null;
+										this.titleImg = null;
+										this.address = null;
+										this.toast("上传成功","success");
+										setTimeout(()=>{
+											this.$router.replace({path:"/activityRelease"})
+										},1000)
+										
+									})
+								}
+							}
+						});
+					});
+				}*/
+			},
+			contentArr(){
+				
+				let content = "<div class='ap_list'>",type,boxArr=this.getActivityArr.dataArr;
+				for(let i in boxArr){
+					type = boxArr[i].type;
+					if(type == "text"){
+						content += "<p class='ap_text'>" +boxArr[i].data.html + "</p>"
+					}else if(type == "img"){
+						content += "<div class='ap_img'><img src='" +boxArr[i].data.files + "' /></div>"
+					}else if(type == "line"){
+						content += "<div class='ap_line'><img src='" +boxArr[i].data.files + "' /></div>"
+					}else if(type == "video"){
+						content += "<div class='ap_video'>" +boxArr[i].data.files + "</div>"
+					}
+				}
+				content += "</div>";
+				return content;
+				/*for(let i in boxArr){
+					type = boxArr[i].type;
+					if(type == "text"){
+						
+					}else if(type == "img"){
+						boxArr[i].data.f = boxArr[i].data.files;
+					}else if(type == "line"){
+						
+					}else if(type == "video"){
+						
+					}
+				}
+				return JSON.stringify(boxArr);*/
+				
+			},
+			contentText(){
+				let content = "",type,boxArr=this.getActivityArr.dataArr;
+				for(let i in boxArr){
+					type = boxArr[i].type;
+					if(type == "text"){
+						content += boxArr[i].data.html;
+						if(!boxArr[Number(i) + 1] || boxArr[Number(i) + 1].type != "text"){
+							return content;
+						}
+					}
+				}
+				return content;
+			},
+			goodsArr(){
+				let goods = [],orderArr = this.getActivityArr.orderArr;
+				for(var item in orderArr){
+					goods.push({
+						goodImgs: orderArr[item].img.files,
+						goodName: orderArr[item].name,
+						sellPrice: orderArr[item].price,
+						limits: Number(orderArr[item].num),
+						remark:	orderArr[item].container,
+					})
+				}
+				goods = (goods && goods.length) ? goods : null;
+				return goods;
+			},
+			videoUrl(){
+				let type,boxArr=this.getActivityArr.dataArr;
+				for(let i in boxArr){
+					type = boxArr[i].type;
+					if(type == "video"){
+						return boxArr[i].data.src;
+					}
+				}
+				return null;
+			},
+		},
+		
+		
+		updated(){
+			this.setArr();
+		},
+	}
+</script>
+
+<style lang="scss" scoped>
+@import "~src/assets/css/function.scss";
+
+.wrapper {
+	width: 100%;
+	height: 100%;
+	padding:.2rem 0;
+}
+.relaseActivity{
+	height: 100%;
+	background: #FFFFFF;
+	
+}
+.bgbai{
+	background-color: #FFFFFF;
+}
+.titleBox{
+	width:100%;
+	background:#FFFFFF;
+}
+.boxContent{
+	width:100%;
+    padding:.2rem;
+	background: #FFFFFF;
+}
+.pd2{
+	padding: .2rem;
+}
+.BoxContent{
+	background:#FFFFFF;
+}
+.goodsBox{
+	width:100%;
+	background:#FFFFFF;
+	/*min-height: calc(70vh);*/
+}
+.GoodsBox{
+	background: #e6e6e6;
+	min-height:0;
+}
+.goodsContain{
+	background: #FFFFFF;
+	padding:.2rem 0;
+	border-radius:.1rem;
+}
+.add {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+.addBox{
+	overflow: hidden;
+	padding: .2rem;
+	padding-top: 0;
+	background-color: #FFFFFF;
+}
+.addItem {
+	margin: 0 auto;
+	display: block;
+	width: 100%;
+	height: .9rem;
+	line-height: .9rem;
+	text-align: center;
+	font-size: $btnSize;
+	color: $communityMainColor;
+	background: #FFFFFF;
+	border-radius: $btnBorderRadius;
+	border: 1px solid $communityMainColor;
+}
+.footerItemDg{
+	height:1.7rem;
+	width: 100%;
+}
+.footerItem {
+	position: fixed;
+	bottom: 0;
+	width: 100%;
+	background-color:#e6e6e6;
+	.protocol {
+		height: .8rem;
+		line-height: .8rem;
+		font-size: .26rem;
+		color: #333;
+		.iconfont {
+			padding-left: .2rem;
+			color: #333;
+			font-size: .32rem;
+		}
+		.selected {
+			color: red;
+		}
+		.xieyi {
+			color: $communityMainColor
+		}
+	}
+	.activityBtns{
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+	}
+	.subBtn,.btn{
+		display: block;
+		width:50%;
+		height: .9rem;
+		line-height: .9rem;
+		margin-bottom: 0;
+		text-align: center;
+		font-size: $btnSize;
+		color: #FFFFFF;
+		background: $communityMainColor;
+		border: none;
+	}
+	.btn{
+		border-top: 1px solid #C7C7CC;
+		color:#333;
+		background: #FFFFFF;
+	}
+	.subBtn{
+		border-top: 1px solid #E7580C;
+	}
+}
+
+.itemWays {
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	z-index: 66;
+	background: #E6E6E6;
+	display: block;
+	font-size: .26rem;
+}
+
+.choseAddItem {
+	text-align: center;
+	padding: .4rem 0;
+	color: #333333;
+	background: #fff;
+}
+
+.choseAddItem .icon {
+	font-size: .6rem;
+	border:solid 1px #EBEBEB;
+	border-radius: .3rem;
+	display: block;
+	height: 1rem;
+	width: 1rem;
+	padding: 0rem .2rem;
+	display:-webkit-box;
+    display:-webkit-flex;
+    display:-ms-flexbox;
+    display:flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    margin-bottom: .1rem;
+}
+.choseAddItem .addLine{
+	border:solid 1px red;
+}
+.cancle {
+	display: block;
+	width: 100%;
+	height: 1rem;
+	line-height: 1rem;
+	color: #333333;
+	text-align: center;
+}
+
+.btnCancle {
+	padding: 0 .3rem;
+}
+
+.mask {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, .5);
+	left: 0;
+	top: 0;
+	display: block;
+}
+
+.swiper-wrapper .swiper-slide {
+	width: 1.85rem;
+	position: relative;
+	display:-webkit-box;
+    display:-webkit-flex;
+    display:-ms-flexbox;
+    display:flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    flex-direction: column;
+}
+.addImageFile{
+	position: absolute;
+	width:100%;
+	height:100%;
+	opacity: 0;
+}
+.lineWrap{
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	z-index: 100;
+	background: #E6E6E6;
+	display: block;
+	font-size: .26rem;
+}
+.lineList{
+	background: #FFFFFF;
+}
+.lineItem{
+	display: inline-block;
+	width:24%;
+	height:1rem;
+}
+.lineItem img{
+	width:100%;
+	height:100%;
+}
+
+.activityOrder{
+	width: auto;
+	margin: .2rem;	
+	padding: .25rem;
+	.addItem{
+		width: 100%;
+	}
+	.addContent{
+		padding: .2rem 0;
+	}
+}
+.auto_title{
+   		padding: .2rem;
+   		input{
+   			box-sizing: border-box;
+   			width: 100%;
+   			padding: .2rem;
+   			border:1px solid #EAEAEA;
+   			font-size: .28rem;
+   			border-radius: .06rem;
+   		}
+   }
+.auto_title:not(:first-child){
+	padding: 0 .2rem;
+	padding-bottom: .2rem;
+}
+
+
+
+.content_main{
+	background:#FFFFFF;
+	padding: .4rem .2rem;
+	.temp_value{
+		font-weight: bold;
+		font-size: .36rem;
+		color: #333333;
+		padding-bottom: .15rem;
+		line-height: .36rem;
+	}
+	.boxContent{
+		position: relative;
+		background: #ffffff;
+		.auto-textarea-wrapper{
+	  	 	position: relative;
+	  	 	padding-bottom: .2rem;
+   	        border-radius: .06rem;
+			.auto-textarea-block{
+	   	        font-size: .3rem;
+	   	        word-break:break-all; 
+	   	        word-wrap:break-word;
+	   	        left: 0;
+	   	        top: 0;
+	   	        color: #333333;
+	   	        line-height: .45rem;
+	   	    }
+	   	}
+	   	.dragPerBg{
+	   		padding-bottom: .2rem;
+	   	}
+	}
+	
+}
+</style>

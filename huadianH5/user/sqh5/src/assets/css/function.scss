@@ -1,0 +1,76 @@
+$titleSize:.3rem;
+$contentSize1:.28rem;
+$contentSize2:.24rem;
+$bigSize:.32rem;
+$middleSize:.3rem;
+$btnSize:.36rem;
+$btnActiveBgColor:#FF4c50;
+$btnVisitBgColor:#e1282e;
+$btnDisabledBgColor:#ff8c8c;
+$btnActiveColor:#FFFFFF;
+$btnDisabledColor:#fed0d0;
+$btnBorderRadius:.1rem;
+$linkColor:#0389d3;
+$fontMainColor:#333;
+$fontSubColor:#666;
+$fontSomeColor:#999;
+$fontInpTip:#999;
+$listLine:#e5e5e5;
+$listBorder:#eaeaea;
+$Background:#f5f5f5;
+$communityMainColor:#e7580c;
+
+
+$logoImg: "http://guoteng.oss-cn-shenzhen.aliyuncs.com/default/default.png?x-oss-process=image/resize,m_fill,";
+@function px2rem($px, $base-font-size: 50px) {
+  @return ($px / $base-font-size) * .4rem;
+}
+
+@function getlogoUrl($width, $heigth) {
+   $width:u($width);
+   $heigth:u($heigth);
+  @return url($logoImg+'h_'+$width+',w_'+$heigth) no-repeat center center / cover #FFF;
+}
+
+@function backgroundUrl($url) {
+    @return url($url) no-repeat center center / cover #FFF;
+}
+
+$pixelBase: 50;
+// 配置
+$px-only:true;
+/* 1 */
+
+@function parseInt($n) {
+    @return $n / ($n * 0 + 1);
+    /* 2 */
+}
+
+@function u($values) {
+    /* 3 */
+    $list: ();
+    /* 4 */
+    @each $value in $values {
+        /* 5 */
+        $unit: unit($value);
+        /* 6 */
+        $val: parseInt($value);
+        /* 2 */
+        @if ($px-only) and ($unit=='rem') {
+            /* 7 */
+            $list: append($list, round($val * $pixelBase));
+            /* 7 */
+        }
+        @else if($unit=='px') or ($unit=='rem') {
+            /* 8 */
+            $list: append($list, $val);
+            /* 8 */
+        }
+        @else {
+            @warn 'There is no unit conversion for #{$unit}';
+            /* 9 */
+        }
+    }
+    @return $list();
+    /* 10 */
+}
